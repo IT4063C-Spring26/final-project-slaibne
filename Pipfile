@@ -9,6 +9,7 @@ jupyter = "*"
 notebook = "*"
 black = "*"
 numpy = "*"
+pandas = "*"
 
 [dev-packages]
 
