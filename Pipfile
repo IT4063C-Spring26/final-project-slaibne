@@ -9,10 +9,11 @@ jupyter = "*"
 notebook = "*"
 black = "*"
 numpy = "*"
-pandas = "*"
 matplotlib = "*"
 python-dotenv = "*"
 data = "*"
+pandas-datareader = "==0.10.0"
+pandas = "<3"
 
 [dev-packages]
 

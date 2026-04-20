@@ -166,21 +166,140 @@
 # Federal Reserve Economic Data (https://fred.stlouisfed.org/)
 # ChatGPT
 
-# In[ ]:
+# In[1]:
 
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
+import os
 
+
+from dotenv import load_dotenv
 from pandas_datareader import data as pdr
+
+
+load_dotenv()
+
+api_key = os.getenv("FRED_API_KEY")
+
+if api_key is None:
+    raise ValueError("FRED_API_KEY not found in environment variables.")
+else:
+    print("FRED_API_KEY successfully loaded.")
+
+
+# In[2]:
+
+
+bank_df = pd.read_csv("data/bank.csv", sep=",")
+
+bank_df.head()
+bank_df.info()
+bank_df.describe()
+
+
+# In[3]:
+
+
+bank_df.isnull().sum()
+
+
+# The Bank Marketing dataset contains 11,162 customer records with 17 features describing demographic, financial, and behavioral attributes. The dataset includes both numerical variables(age, balance, duration, campaign) and categorical variables (job, marital status, education, loan status). No missing values are present but several categorical fields require encoding for machine learning. The dataset will serve as the primary customer behavioral dataset for modeling annuity product selection. 
+
+# In[4]:
+
+
+# Convert categorical variables (important for ML later)
+categorical_cols = [
+    "job", "marital", "education", "default",
+    "housing", "loan", "contact", "month", "poutcome", "deposit"
+]
+
+for col in categorical_cols:
+    bank_df[col] = bank_df[col].astype("category")
+
+
+# In[5]:
+
+
+start = datetime.datetime(2010, 1, 1)
+end = datetime.datetime(2024, 12, 31)
+
+fed_funds = pdr.DataReader("FEDFUNDS", "fred", start, end)
+
+
+# In[6]:
+
+
+fed_funds = fed_funds.reset_index()
+fed_funds["year"] = fed_funds["DATE"].dt.year
+
+# yearly average interest rate
+annual_rates = fed_funds.groupby("year")["FEDFUNDS"].mean().to_dict()
+
+
+# In[7]:
+
+
+base = bank_df.copy()
+
+base.describe()
+
+# Add a unique customer ID for easier merging and analysis
+base["customer_id"] = range(1, len(base) + 1)
+base.head()
+
+
+# In[8]:
+
+
+base["balance"].hist(bins=50)
+plt.title("Distribution of Account Balances")
+
+
+# In[9]:
+
+
+base["year"] = np.random.choice(list(annual_rates.keys()), size=len(base))
+base["interest_rate"] = base["year"].map(annual_rates)
+
+
+# In[10]:
+
+
+rate_min = base["interest_rate"].min()
+rate_max = base["interest_rate"].max()
+
+base["rate_scaled"] = (base["interest_rate"] - rate_min) / (rate_max - rate_min)
+
+
+# In[11]:
+
+
+base["macro_adjustment"] = 0.9 +(base["rate_scaled"] * 0.2)
+
+
+# In[12]:
+
+
+base["income"] = (base["base_income"] * base["macro_adjustment"] +
+                  np.random.normal(0, 10000, len(base))).clip(20000, 200000)
+
+base.head()
 
 
 # # Exploratory Data Analysis
 # This exploratory data analysis examines how customer demographics (age, income, risk score) and macroeconomic conditions (interest rates) are associated with annuity product selection (fixed, variable, indexed). The goal is to identify distributional patterns, correlations, and potential segmentation behavior within the dataset.
 
-# In[2]:
+# In[ ]:
+
+
+
+
+
+# In[ ]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
