@@ -11,6 +11,8 @@ black = "*"
 numpy = "*"
 pandas = "*"
 matplotlib = "*"
+python-dotenv = "*"
+data = "*"
 
 [dev-packages]
 
