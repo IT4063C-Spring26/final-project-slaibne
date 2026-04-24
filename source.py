@@ -169,7 +169,7 @@
 # # Imports
 # 
 
-# In[1]:
+# In[2]:
 
 
 import pandas as pd
@@ -182,6 +182,7 @@ import seaborn as sns
 
 from dotenv import load_dotenv
 from pandas_datareader import data as pdr
+from sklearn.model_selection import train_test_split
 
 
 load_dotenv()
@@ -198,7 +199,7 @@ else:
 # 
 # 
 
-# In[2]:
+# In[3]:
 
 
 bank_df = pd.read_csv("data/bank.csv", sep=",")
@@ -208,7 +209,7 @@ bank_df.info()
 bank_df.describe()
 
 
-# In[3]:
+# In[4]:
 
 
 bank_df.isnull().sum()
@@ -216,7 +217,7 @@ bank_df.isnull().sum()
 
 # The Bank Marketing dataset contains 11,162 customer records with 17 features describing demographic, financial, and behavioral attributes. The dataset includes both numerical variables(age, balance, duration, campaign) and categorical variables (job, marital status, education, loan status). No missing values are present but several categorical fields require encoding for machine learning. The dataset will serve as the primary customer behavioral dataset for modeling annuity product selection. 
 
-# In[4]:
+# In[5]:
 
 
 # Convert categorical variables (important for ML later)
@@ -229,7 +230,7 @@ for col in categorical_cols:
     bank_df[col] = bank_df[col].astype("category")
 
 
-# In[5]:
+# In[6]:
 
 
 start = datetime.datetime(2010, 1, 1)
@@ -238,7 +239,7 @@ end = datetime.datetime(2024, 12, 31)
 fed_funds = pdr.DataReader("FEDFUNDS", "fred", start, end)
 
 
-# In[6]:
+# In[7]:
 
 
 fed_funds = fed_funds.reset_index()
@@ -248,7 +249,7 @@ fed_funds["year"] = fed_funds["DATE"].dt.year
 annual_rates = fed_funds.groupby("year")["FEDFUNDS"].mean().to_dict()
 
 
-# In[7]:
+# In[8]:
 
 
 base = bank_df.copy()
@@ -259,7 +260,7 @@ base.describe()
 base["customer_id"] = range(1, len(base) + 1)
 
 
-# In[8]:
+# In[9]:
 
 
 job_income_map = {
@@ -279,14 +280,14 @@ base["base_income"] = base["job"].map(job_income_map)
 base["base_income"] = base["base_income"].fillna(base["base_income"].median())
 
 
-# In[9]:
+# In[10]:
 
 
 base["year"] = np.random.choice(list(annual_rates.keys()), size=len(base))
 base["interest_rate"] = base["year"].map(annual_rates)
 
 
-# In[10]:
+# In[11]:
 
 
 rate_min = base["interest_rate"].min()
@@ -295,13 +296,13 @@ rate_max = base["interest_rate"].max()
 base["rate_scaled"] = (base["interest_rate"] - rate_min) / (rate_max - rate_min)
 
 
-# In[11]:
+# In[12]:
 
 
 base["macro_adjustment"] = 0.9 +(base["rate_scaled"] * 0.2)
 
 
-# In[12]:
+# In[13]:
 
 
 base["income"] = (base["base_income"] * base["macro_adjustment"] +
@@ -312,7 +313,7 @@ base.head()
 
 # Income was not directly available in the dataset, so it was synthetically generated using a hybrid approach. A base income level was assigned using job categories to reflect individual earning potential. This base value was then adjusted using macroeconomic conditions derived from Federal Reserve interest rate data. Interest rates were normalized and used to create a macro adjustment factor, simulating the effect of broader economic conditions on income levels. Random noise was added to preserve variability across individuals. This approach ensures that income reflects both micro-level characteristics and macroeconomic trends.
 
-# In[13]:
+# In[14]:
 
 
 def compute_risk_score(row):
@@ -348,13 +349,13 @@ def compute_risk_score(row):
 base["risk_score"] = base.apply(compute_risk_score, axis=1)
 
 
-# In[14]:
+# In[15]:
 
 
 base["retirement_horizon"] = np.maximum(65 - base["age"], 1)
 
 
-# In[15]:
+# In[16]:
 
 
 def assign_product(row):
@@ -387,7 +388,7 @@ def assign_product(row):
 base["annuity_product"] = base.apply(assign_product, axis=1)
 
 
-# In[16]:
+# In[17]:
 
 
 base["year"] = np.random.choice(list(annual_rates.keys()), size=len(base))
@@ -395,7 +396,7 @@ base["interest_rate"] = base["year"].map(annual_rates)
 base["annuity_product"] = base.apply(assign_product, axis=1)
 
 
-# In[17]:
+# In[18]:
 
 
 products = pd.DataFrame({
@@ -406,7 +407,7 @@ products = pd.DataFrame({
 })
 
 
-# In[31]:
+# In[19]:
 
 
 model = base.copy()
@@ -424,7 +425,7 @@ model.head()
 
 # The base dataframe is used as an intermediate feature-engineerign layer where customer attributes and macroeconomic variables are constructed and validated. The model dataframe represents the finalized modeling dataset, including the target variable (annuity_product) and any additional product level attributes and is used for machine learning and final analysis.
 
-# In[32]:
+# In[20]:
 
 
 print(base.columns)
@@ -451,7 +452,7 @@ base.head()
 # 
 # 
 
-# In[41]:
+# In[21]:
 
 
 # Create age groups
@@ -477,7 +478,7 @@ plt.show()
 # 
 # 
 
-# In[42]:
+# In[22]:
 
 
 plt.figure()
@@ -500,7 +501,7 @@ plt.show()
 # 
 # 
 
-# In[43]:
+# In[23]:
 
 
 rate_trend = base.groupby(["year", "annuity_product"]).size().unstack()
@@ -525,7 +526,7 @@ plt.show()
 
 # Below is a correlation heatmap that highlights the relationships between demographic, financial, behavioral, and engineered features in the dataset.
 
-# In[50]:
+# In[24]:
 
 
 plt.figure(figsize=(10,6))
@@ -561,7 +562,7 @@ plt.show()
 # 
 # Overall, the heatmap validates both the internal consistency of the engineered features and the presence of meaningful relationships that will support downstream machine learning models.
 
-# In[48]:
+# In[25]:
 
 
 # To avoid mulicollinearity for cleaner model later on
@@ -570,7 +571,7 @@ drop_cols = ["base_income", "rate_scaled", "macro_adjustment"]
 
 # This boxplot evaluates whether the engineered risk_score meaningfully influences annuity product assignment. 
 
-# In[49]:
+# In[26]:
 
 
 plt.figure(figsize=(8, 5))
@@ -584,7 +585,7 @@ plt.show()
 # The median risk score for customers selecting variable annuities is higher than for those selecting fixed or indexed annuities, indicating that higher-risk individuals are more likely to be associated with variable products. The interquartile range is also shifted upwards for variable annuities, suggesting a concentrated distribution of higher-risk customers. In contrast, the interquartile ranges for fixed and indexed annuities exhibit broader distributions with lower median values, reflecting more conservative or moderate risk profiles.
 # However, there is noticeable overlap between all three product categories, indicating that risk score is not the sole determinant of product selection. This aligns with the project design, where additional factors such as retirement horizon and macroeconomic conditions (interest rates) also influence the probabilistic assignment of annuity products.
 
-# In[46]:
+# In[27]:
 
 
 base.groupby("annuity_product")["risk_score"].agg(["mean", "median", "std"])
@@ -601,7 +602,7 @@ base.groupby("annuity_product")["risk_score"].agg(["mean", "median", "std"])
 # # Data Cleaning and Transformation
 # This section prepares the dataset for analysis and machine learning by addressing missing values, duplicates, outliers, and data type inconsistencies. The goal is to ensure data quality, consistency, and suitability for modeling.
 
-# In[ ]:
+# In[28]:
 
 
 base.isnull().sum()
@@ -613,7 +614,7 @@ base.isnull().sum()
 # 
 # The absence of missing values is expected because key variables such as income and risk score were generated programmatically during the feature engineering stage, ensuring full population coverage across all observations.
 
-# In[ ]:
+# In[29]:
 
 
 base.duplicated().sum()
@@ -621,7 +622,7 @@ base.duplicated().sum()
 
 # The dataset was evaluated for duplicate records to ensure that each observation represents a unique customer instance. No duplicate rows were identified, indicating that the dataset maintains one-to-one integrity across observations. As a result, no duplicate removal was required.
 
-# In[55]:
+# In[30]:
 
 
 base[["income", "balance", "duration", "campaign"]].describe()
@@ -635,7 +636,7 @@ base[["income", "balance", "duration", "campaign"]].describe()
 # - Extremely large values -> skew average
 # - Negative balances -> can distort income proxy logic
 
-# In[56]:
+# In[31]:
 
 
 base["balance"] = base["balance"].clip(lower=0, upper=50000)
@@ -644,7 +645,7 @@ base["balance"] = base["balance"].clip(lower=0, upper=50000)
 # Duration :
 # - Max = 3881 (This is extreme compared to typical range.)
 
-# In[58]:
+# In[32]:
 
 
 base["duration"] = base["duration"].clip(upper=2000)
@@ -653,7 +654,7 @@ base["duration"] = base["duration"].clip(upper=2000)
 # Campaign :
 # - Max = 63 contacts (Unrealistic when compared to the mean ~2.5)
 
-# In[59]:
+# In[33]:
 
 
 base["campaign"] = base["campaign"].clip(upper=20)
@@ -675,7 +676,7 @@ base["campaign"] = base["campaign"].clip(upper=20)
 
 # ## Data Type and Feature Transformations
 
-# In[61]:
+# In[34]:
 
 
 # Convert categorical variables
@@ -717,9 +718,77 @@ base["rate_environment"] = np.where(
 
 # ## Challenges
 
+# ### Synthetic Data
+
 # One key challenge is that the annuity product variable is generated through a probabilistic simulation rather than observed real-world behavior. This introduces a risk that the model may learn patterns that reflect the simulation logic rather than true customer behavior.
 
-# In[62]:
+# ### Multicollinearity
+
+# Several engineered features, such as income and base income or rate scaled and macro adjustment, exhibit high correlation. This may introduce multicollinearity, particularly in linear models such as logistic regression, and may require feature selection or regularization.
+
+# ### Categorical Encoding
+
+# The dataset contains multiple categorical variables that must be encoded into numerical form before training machine learning models. Improper encoding could lead to loss of information or model bias.
+
+# ### Class Balance
+
+# The distribution of annuity product types may be imbalanced depending on the simulation parameters, which can affect model performance and bias predictions toward the majority class.
+
+# ### How these challenges will be addressed
+
+# These challenges will be addressed through structured preprocessing and model design. A machine learning pipeline will be implemented using scikit-learn to handle missing values, encode categorical variables, and scale numerical features consistently. Multicollinearity will be mitigated through feature selection or by using tree-based models that are less sensitive to correlated inputs. Class imbalance will be evaluated and, if necessary, addressed using techniques such as class weighting or resampling. Finally, multiple models will be tested and compared to ensure that results are robust and not dependent on a single modeling approach.
+
+# ### Evaluation Metrics
+
+# Model performance will be evaluated using classification metrics including accuracy, precision, recall, and F1-score. A confusion matrix will also be used to assess how well the model distinguishes between different annuity product types. These metrics provide a comprehensive evaluation of both overall performance and class-level prediction quality.
+
+# # Machine Learning Implementation
+
+# In[35]:
+
+
+# Defining features and target
+target = "annuity_product"
+
+feature_cols = [
+    "age",
+    "income",
+    "risk_score",
+    "retirement_horizon",
+    "interest_rate",
+    "campaign",
+    "previous",
+    "job",
+    "marital",
+    "education",
+    "housing",
+    "loan",
+    "deposit",
+    "age_group",
+    "rate_environment"
+]
+
+X = base[feature_cols]
+y = base[target]
+
+
+# These features were selected because they represent the major drivers of annuity product selextion in the project: customer demographics, financial capacity, behavioral engagement, debt obligations, lifecycle stage, and macroeconomic conditions. The target variable is annuity_product, which classifies customers into fixed, variable, or indexed annuity product categories.
+
+# ## Train / Test Split
+
+# In[36]:
+
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+
+# In[ ]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
