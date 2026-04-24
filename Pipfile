@@ -8,6 +8,13 @@ ipykernel = "*"
 jupyter = "*"
 notebook = "*"
 black = "*"
+numpy = "*"
+matplotlib = "*"
+python-dotenv = "*"
+data = "*"
+pandas-datareader = "==0.10.0"
+pandas = "<3"
+scikit-learn = "*"
 
 [dev-packages]
 
