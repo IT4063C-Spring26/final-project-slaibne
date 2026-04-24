@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # Annuity Product Selection Analysis Using Customer Behavior and Macroeconomic Condition
+# # Annuity Product Selection Analysis Using Customer Behavior and Macroeconomic Conditions
 # 
 # ![Banner](./assets/banner.jpeg)
 
-# ## Project Overview
+# ## 1. Project Overview
 
-# ### Topic
+# ### 1.1 Topic
 # 
 # Retail annuity products, specifically fixed, variable and indexed annuities, are designed to meet different financial needs related to risk tolerance, income stability, and long-term growth. However, product selection is oftern influenced by a combination of customer demographics (i.e age, income, and retirement horizon) and external economic conditions such as interest rates and inflation, rather than a clear data-driven matching process.
 # 
@@ -31,8 +31,7 @@
 # - and better alignment between customer needs and financial products
 # 
 
-# ### Project Question
-# 
+# ### 1.2 Project Question
 # How do customer demographic(age and income) and macroeconomic conditions(interest rates) influence the liklihood of selecting fixed, variable, or indexed annuity products?
 # 
 # Addition questions:
@@ -41,8 +40,7 @@
 # - How do changes in interest rates over time impact the distribution of annuity product types?
 # - Which factors (age, income, or economic conditions) have the greatest predictive power in determining product selection?
 
-# ### Expected Answer / Hypothesis
-# 
+# ### 1.3 Expected Answer / Hypothesis
 # - A predictive model outputting probabilities such as: “A 60-year-old with moderate income during high interest rate periods has a 72% probability of selecting a fixed annuity”
 # 
 # - Ranked feature importance:
@@ -54,106 +52,53 @@
 # 
 # 
 
-# ### Data Sources
-# Economic Indicators (API) : from Federal Reserve Economic Data (https://fred.stlouisfed.org/)
+# ### 1.4 Data Sources
+# 1. Bank Marketing Dataset (Kaggle)
+# - Customer demographics and behavioral features
+# - Used as the foundation for customer profiles
 # 
-# Key variables: 
-# - Federal interest rates
-# - Inflation rate
-# - Treasury yields
+# 2. FRED Economic Data (API)
+# - Federal Funds Rate (FEDFUNDS)
+# - Used to model macroeconomic conditions
 # 
-# Assign economic conditions to each observation and create low rate vs high rate environments.
-# 
-# bank.csv from Bank Marketing Dataset on Kaggle
-# https://www.kaggle.com/datasets/janiobachmann/bank-marketing-dataset?resource=download
-# 
-# Key variables:
-# - age
-# - job / income proxy
-# - marital status
-# = education
-# 
-# Represent customer demographic and financial profiles and create derived features.
-# 
-# Use pandas to generate a simulated annuity products dataset:
-# - real annuity product selection data is proprietary
-# - Customer attributes such as age, income, and prevailing interest rates were used to assign annuity product types in a way that reflects realistic market tendencies
-# 
+# 3. Simulated Annuity Dataset
+# - Generated within this notebook
+# - Combines customer + economic data to assign product choices
 
-# ### Approach and Analysis
+# ### 1.5 Approach and Analysis
 
-# This project will follow a structured data analytics workflow to examine how customer demographics and economic conditions influence annuity product selection.
+# This project follows an end-to-end data analysis workflow designed to evaluate how customer characteristics and macroeconomic conditions influence annuity product selection.
 # 
-# 1. Data Acquisition and Integration
-# 
-# Three datasets will be used:
-# 
-# A customer financial behavior dataset (CSV file)
-# Macroeconomic data retrieved via the Federal Reserve Economic Data
-# A simulated annuity product dataset generated within the notebook
-# 
-# The customer dataset will provide demographic variables such as age and income. Economic data (e.g., interest rates) will be mapped to each observation using a time-based or scenario-based assignment. A simulated dataset will assign annuity product types (fixed, variable, indexed) to each customer using probabilistic rules based on financial assumptions.
-# 
-# 2. Data Cleaning and Preprocessing
-# Handle missing or inconsistent values in customer data
-# Normalize and clip income values to realistic ranges
-# Convert continuous variables into categorical features:
-# Age → grouped into (<40, 40–55, 55+)
-# Income → segmented into low, medium, and high tiers
-# Ensure all datasets are aligned in structure for merging
-# 3. Feature Engineering
-# Create derived variables:
-# Age group
-# Income tier
-# Interest rate category (low vs high rate environment)
-# Generate the target variable:
-# annuity_product (fixed, variable, indexed) using probabilistic assignment
-# Merge product metadata (risk level, return type, fee level) into the final dataset
-# 4. Exploratory Data Analysis (EDA)
-# 
-# EDA will be conducted to identify patterns and relationships:
-# 
-# Distribution of annuity product types across age groups
-# Relationship between income tiers and product selection
-# Impact of interest rate levels on product distribution
-# Correlation analysis between variables
-# 
-# Visualizations will include:
-# 
-# Bar charts (product type vs demographic groups)
-# Heatmaps (income vs product type)
-# Line plots (interest rates vs product trends)
-# 5. Predictive Modeling
-# 
-# A classification model will be developed to predict annuity product selection:
-# 
-# Logistic regression and/or decision tree classifier
-# Input variables:
-# Age group
-# Income tier
-# Interest rate
-# Output:
-# Probability of selecting each annuity product type
-# 6. Model Evaluation and Interpretation
-# Evaluate model performance using accuracy and confusion matrix
-# Analyze feature importance to determine which variables most influence product selection
-# Interpret results in the context of financial decision-making
-# 7. Insight Generation
-# 
-# The final step will translate analytical results into business insights:
-# 
-# Identify which customer segments are most likely to choose each product type
-# Evaluate how economic conditions shift product preferences
-# Discuss how these insights could support better targeting and product recommendations in an annuity business context
+# The workflow includes:
 
-# ## Setup
-
-# ### Imports
+# 1. **Data acquisition and preparation**  
+#    The Bank Marketing dataset is loaded as the customer-level foundation, and FRED interest rate data is retrieved as the macroeconomic layer.
 # 
+# 2. **Feature engineering**  
+#    Since direct income and risk tolerance are not available, income and risk score are engineered using customer demographics, job category, loan indicators, prior engagement, and macroeconomic conditions.
+# 
+# 3. **Simulation of annuity product selection**  
+#    Fixed, variable, and indexed annuity product choices are generated using probabilistic logic based on risk score, retirement horizon, and interest rate environment.
+# 
+# 4. **Exploratory data analysis**  
+#    Visualizations and statistical summaries are used to examine product selection patterns across age groups, income levels, risk scores, and economic conditions.
+# 
+# 5. **Machine learning implementation**  
+#    Classification models are trained to predict annuity product selection. The models are evaluated using accuracy, precision, recall, F1-score, confusion matrices, and feature importance.
+# 
+# 6. **Business interpretation**  
+#    Final insights are interpreted in the context of financial services reporting, customer segmentation, and annuity product strategy.
+# 
+# This workflow reflects how data can be transformed from raw customer records into an analytical dataset that supports reporting, segmentation, and predictive modeling in a financial services environment.
 
-# In[2]:
+# ## 2. Setup
+
+# ### 2.1 Imports
+
+# In[1]:
 
 
+# The following libraries are used for data manipulation, visualization, and machine learning:
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -164,6 +109,7 @@ import seaborn as sns
 
 from dotenv import load_dotenv
 from pandas_datareader import data as pdr
+
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
@@ -175,7 +121,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 
-# In[7]:
+# In[2]:
 
 
 np.random.seed(42)
@@ -183,7 +129,14 @@ np.random.seed(42)
 
 # A random seed is set to make simulated values reproducible. This ensures that income generation, year assignment, and simulated annuity product assignment remain consistent across notebook runs.
 
-# ### Environment Variables
+# ### 2.2 Environment Variables
+# 
+
+# This project uses the Federal Reserve Economic Data (FRED) API to retrieve macroeconomic indicators.
+# 
+# The API key is stored securely using environment variables to prevent exposing sensitive information in the notebook or repository.
+# 
+# The key is loaded from a `.env` file using the `python-dotenv` package.
 
 # In[3]:
 
@@ -198,19 +151,29 @@ else:
     print("FRED_API_KEY successfully loaded.")
 
 
-# ## Data Loading and Preparation
+# ## 3. Data Loading, Preparation, and Validation
 
-# ### Load Bank Marketing Dataset
+# ### 3.1 Load Bank Marketing Dataset
 
-# In[5]:
+# The Bank Marketing dataset is used as the foundational customer dataset for this analysis. It provides demographic, financial, and behavioral attributes that are later transformed into features relevant for annuity product selection.
+
+# In[4]:
 
 
 bank_df = pd.read_csv("data/bank.csv", sep=",")
 
 
-# ### Initial Data Inspection
+# ### 3.2 Initial Data Inspection
+# 
 
-# In[6]:
+# Initial inspection is performed to understand the structure, data types, and distributions of the dataset.
+# 
+# This step helps identify:
+# - data types for each feature
+# - potential missing values
+# - distributions and outliers in numerical variables
+
+# In[5]:
 
 
 bank_df.head()
@@ -218,60 +181,142 @@ bank_df.info()
 bank_df.describe()
 
 
-# In[4]:
-
-
-bank_df.isnull().sum()
-
-
 # The Bank Marketing dataset contains 11,162 customer records with 17 features describing demographic, financial, and behavioral attributes. The dataset includes both numerical variables(age, balance, duration, campaign) and categorical variables (job, marital status, education, loan status). No missing values are present but several categorical fields require encoding for machine learning. The dataset will serve as the primary customer behavioral dataset for modeling annuity product selection. 
 
-# In[2]:
+# In[6]:
 
 
-# Convert categorical variables
+print("Shape:", bank_df.shape)
+print("Missing values:", bank_df.isnull().sum().sum())
+print("Duplicate rows:", bank_df.duplicated().sum())
+bank_df.head()
+
+
+# The dataset contains no missing values. Features include both categorical and numerical variables representing customer demographics and financial behavior.
+
+# The raw Bank Marketing dataset was inspected before transformation. This confirms the number of rows and columns, checks whether missing values exist, and identifies whether duplicate records are present before feature engineering begins.
+
+# In[7]:
+
+
 categorical_cols = [
     "job", "marital", "education", "default",
     "housing", "loan", "contact", "month", "poutcome", "deposit"
 ]
 
-for col in categorical_cols:
-    bank_df[col] = bank_df[col].astype("category")
-
 
 # Categorical variables are explicitly converted to the 'category' data type to improve memory efficiency and ensure proper handling during exploratory data analysis. This step does not perform encoding but prepares the dataset for grouping and visualization.
 
-# In[6]:
+# ### 3.3 Load FRED Interest Rate Data
+
+# Macroeconomic data is retrieved from the Federal Reserve Economic Data (FRED) API.
+# 
+# The Federal Funds Rate is used as a proxy for the broader interest rate environment, which influences annuity product attractiveness.
+# 
+# A time range is defined to align economic conditions with the simulated customer dataset.
+
+# In[ ]:
 
 
 start = datetime.datetime(2010, 1, 1)
 end = datetime.datetime(2024, 12, 31)
 
-fed_funds = pdr.DataReader("FEDFUNDS", "fred", start, end)
+fred_data = pdr.DataReader("FEDFUNDS", "fred", start, end)
+fred_data = fred_data.resample("YE").mean()
+
+fred_data.head()
 
 
-# In[7]:
+# In[9]:
 
 
-fed_funds = fed_funds.reset_index()
-fed_funds["year"] = fed_funds["DATE"].dt.year
-
-# yearly average interest rate
-annual_rates = fed_funds.groupby("year")["FEDFUNDS"].mean().to_dict()
+annual_rates = fred_data["FEDFUNDS"].to_dict()
 
 
-# In[8]:
+# Annual average interest rates are computed and converted into a dictionary for mapping to customer observations.
+
+# In[10]:
+
+
+annual_rates_df = pd.DataFrame(
+    list(annual_rates.items()),
+    columns=["year", "interest_rate"]
+)
+
+annual_rates_df.head()
+
+
+# In[11]:
+
+
+print("FRED years:", annual_rates_df["year"].min(), "-", annual_rates_df["year"].max())
+print("Missing interest rates:", annual_rates_df["interest_rate"].isnull().sum())
+annual_rates_df.describe()
+
+
+# In[16]:
+
+
+fred_data.head()
+fred_data.columns
+
+
+# In[14]:
+
+
+# Reset index safely
+fred_data = fred_data.reset_index()
+
+# Rename index column if needed
+if "DATE" not in fred_data.columns:
+    fred_data.rename(columns={fred_data.columns[0]: "DATE"}, inplace=True)
+
+# Extract year
+fred_data["year"] = fred_data["DATE"].dt.year
+
+# Compute yearly average interest rate
+annual_rates = fred_data.groupby("year")["FEDFUNDS"].mean().to_dict()
+
+
+# The FRED data was aggregated to yearly average Federal Funds Rates so it could be joined to customer records by assigned year. Validation checks confirm that the yearly rate table contains no missing interest rate values and covers the expected date range.
+
+# ### 3.4 Create Base Customer Dataset
+# 
+
+# The base dataframe is created from the original Bank Marketing dataset and serves as the main working dataset for feature engineering. This keeps the raw source data (bank_df) separate from the transformed analytical dataset.
+
+# In[18]:
 
 
 base = bank_df.copy()
 
 base.describe()
 
-# Add a unique customer ID for easier merging and analysis
 base["customer_id"] = range(1, len(base) + 1)
 
 
-# In[9]:
+# In[19]:
+
+
+print("Unique customer IDs:", base["customer_id"].nunique())
+print("Total rows:", len(base))
+print("Customer ID is unique:", base["customer_id"].is_unique)
+
+
+# A unique customer_id was created to support traceability and future merging. The validation check confirms that each row has one unique identifier.
+
+# ## 4. Feature Engineering and Simulation
+# 
+
+# The unique customer_id was created in the base dataset preparation step. It is retained here as a stable identifier throughout feature engineering and modeling.
+
+# ### 4.2 Create Income Estimate
+
+# The Bank Marketing dataset does not contain a direct income variable. To support annuity product analysis, income is estimated using job category as a baseline indicator of earning potential.
+# 
+# This is an engineered approximation, not a directly observed value. The purpose is to create a realistic financial capacity variable that can be used in downstream segmentation and modeling.
+
+# In[ ]:
 
 
 job_income_map = {
@@ -291,14 +336,51 @@ base["base_income"] = base["job"].map(job_income_map)
 base["base_income"] = base["base_income"].fillna(base["base_income"].median())
 
 
-# In[10]:
+# Income is derived from education level and adjusted using macroeconomic conditions.
+
+# Median imputation is used as a fallback for any job categories that are not included in the mapping. Median is preferred over mean because income-related variables are often skewed, and the median is less affected by high-income outliers.
+
+# In[ ]:
+
+
+base[["job", "base_income"]].drop_duplicates().sort_values("base_income")
+
+
+# In[ ]:
+
+
+print("Missing base_income:", base["base_income"].isnull().sum())
+base["base_income"].describe()
+
+
+# Base income was assigned using job category because the source dataset does not include direct income. The validation check confirms that every customer received a base income value after mapping and median fallback handling.
+
+# ### 4.3 Add Macroeconomic Interest Rate Features
+
+# Each customer record is assigned a simulated observation year. That year is then mapped to the corresponding annual average Federal Funds Rate from FRED.
+# 
+# This allows customer-level records to be enriched with a macroeconomic context variable.
+
+# In[20]:
 
 
 base["year"] = np.random.choice(list(annual_rates.keys()), size=len(base))
 base["interest_rate"] = base["year"].map(annual_rates)
 
+print("Missing interest rates:", base["interest_rate"].isnull().sum())
 
-# In[11]:
+base[["customer_id", "year", "interest_rate"]].head()
+
+
+# In[ ]:
+
+
+base.groupby("year")["interest_rate"].mean().head()
+
+
+# Each customer record was assigned a year and matched to the corresponding yearly average Federal Funds Rate. The validation check confirms that no customer records are missing interest rate values after mapping. We are using mean to ensure that the mapped annual values are consistent. All records for the same year should have the same interest rate.
+
+# In[ ]:
 
 
 rate_min = base["interest_rate"].min()
@@ -307,13 +389,26 @@ rate_max = base["interest_rate"].max()
 base["rate_scaled"] = (base["interest_rate"] - rate_min) / (rate_max - rate_min)
 
 
-# In[12]:
+# In[ ]:
 
 
 base["macro_adjustment"] = 0.9 +(base["rate_scaled"] * 0.2)
 
 
-# In[13]:
+# In[ ]:
+
+
+base[["interest_rate", "rate_scaled", "macro_adjustment"]].describe()
+
+
+# In[ ]:
+
+
+print("Rate scaled min/max:", base["rate_scaled"].min(), base["rate_scaled"].max())
+print("Macro adjustment min/max:", base["macro_adjustment"].min(), base["macro_adjustment"].max())
+
+
+# In[ ]:
 
 
 base["income"] = (base["base_income"] * base["macro_adjustment"] +
@@ -324,7 +419,7 @@ base.head()
 
 # Income was not directly available in the dataset, so it was synthetically generated using a hybrid approach. A base income level was assigned using job categories to reflect individual earning potential. This base value was then adjusted using macroeconomic conditions derived from Federal Reserve interest rate data. Interest rates were normalized and used to create a macro adjustment factor, simulating the effect of broader economic conditions on income levels. Random noise was added to preserve variability across individuals. This approach ensures that income reflects both micro-level characteristics and macroeconomic trends.
 
-# In[14]:
+# In[ ]:
 
 
 def compute_risk_score(row):
@@ -360,13 +455,13 @@ def compute_risk_score(row):
 base["risk_score"] = base.apply(compute_risk_score, axis=1)
 
 
-# In[15]:
+# In[ ]:
 
 
 base["retirement_horizon"] = np.maximum(65 - base["age"], 1)
 
 
-# In[16]:
+# In[ ]:
 
 
 def assign_product(row):
@@ -399,15 +494,7 @@ def assign_product(row):
 base["annuity_product"] = base.apply(assign_product, axis=1)
 
 
-# In[17]:
-
-
-base["year"] = np.random.choice(list(annual_rates.keys()), size=len(base))
-base["interest_rate"] = base["year"].map(annual_rates)
-base["annuity_product"] = base.apply(assign_product, axis=1)
-
-
-# In[18]:
+# In[ ]:
 
 
 products = pd.DataFrame({
@@ -418,7 +505,7 @@ products = pd.DataFrame({
 })
 
 
-# In[19]:
+# In[ ]:
 
 
 model = base.copy()
@@ -436,7 +523,7 @@ model.head()
 
 # The base dataframe is used as an intermediate feature-engineerign layer where customer attributes and macroeconomic variables are constructed and validated. The model dataframe represents the finalized modeling dataset, including the target variable (annuity_product) and any additional product level attributes and is used for machine learning and final analysis.
 
-# In[20]:
+# In[ ]:
 
 
 print(base.columns)
@@ -463,7 +550,7 @@ base.head()
 # 
 # 
 
-# In[21]:
+# In[ ]:
 
 
 # Create age groups
@@ -489,7 +576,7 @@ plt.show()
 # 
 # 
 
-# In[22]:
+# In[ ]:
 
 
 plt.figure()
@@ -512,7 +599,7 @@ plt.show()
 # 
 # 
 
-# In[23]:
+# In[ ]:
 
 
 rate_trend = base.groupby(["year", "annuity_product"]).size().unstack()
@@ -537,7 +624,7 @@ plt.show()
 
 # Below is a correlation heatmap that highlights the relationships between demographic, financial, behavioral, and engineered features in the dataset.
 
-# In[24]:
+# In[ ]:
 
 
 plt.figure(figsize=(10,6))
@@ -573,7 +660,7 @@ plt.show()
 # 
 # Overall, the heatmap validates both the internal consistency of the engineered features and the presence of meaningful relationships that will support downstream machine learning models.
 
-# In[25]:
+# In[ ]:
 
 
 # To avoid mulicollinearity for cleaner model later on
@@ -582,7 +669,7 @@ drop_cols = ["base_income", "rate_scaled", "macro_adjustment"]
 
 # This boxplot evaluates whether the engineered risk_score meaningfully influences annuity product assignment. 
 
-# In[26]:
+# In[ ]:
 
 
 plt.figure(figsize=(8, 5))
@@ -596,7 +683,7 @@ plt.show()
 # The median risk score for customers selecting variable annuities is higher than for those selecting fixed or indexed annuities, indicating that higher-risk individuals are more likely to be associated with variable products. The interquartile range is also shifted upwards for variable annuities, suggesting a concentrated distribution of higher-risk customers. In contrast, the interquartile ranges for fixed and indexed annuities exhibit broader distributions with lower median values, reflecting more conservative or moderate risk profiles.
 # However, there is noticeable overlap between all three product categories, indicating that risk score is not the sole determinant of product selection. This aligns with the project design, where additional factors such as retirement horizon and macroeconomic conditions (interest rates) also influence the probabilistic assignment of annuity products.
 
-# In[27]:
+# In[ ]:
 
 
 base.groupby("annuity_product")["risk_score"].agg(["mean", "median", "std"])
@@ -613,7 +700,7 @@ base.groupby("annuity_product")["risk_score"].agg(["mean", "median", "std"])
 # # Data Cleaning and Transformation
 # This section prepares the dataset for analysis and machine learning by addressing missing values, duplicates, outliers, and data type inconsistencies. The goal is to ensure data quality, consistency, and suitability for modeling.
 
-# In[28]:
+# In[ ]:
 
 
 base.isnull().sum()
@@ -625,7 +712,7 @@ base.isnull().sum()
 # 
 # The absence of missing values is expected because key variables such as income and risk score were generated programmatically during the feature engineering stage, ensuring full population coverage across all observations.
 
-# In[29]:
+# In[ ]:
 
 
 base.duplicated().sum()
@@ -633,7 +720,7 @@ base.duplicated().sum()
 
 # The dataset was evaluated for duplicate records to ensure that each observation represents a unique customer instance. No duplicate rows were identified, indicating that the dataset maintains one-to-one integrity across observations. As a result, no duplicate removal was required.
 
-# In[30]:
+# In[ ]:
 
 
 base[["income", "balance", "duration", "campaign"]].describe()
@@ -647,7 +734,7 @@ base[["income", "balance", "duration", "campaign"]].describe()
 # - Extremely large values -> skew average
 # - Negative balances -> can distort income proxy logic
 
-# In[31]:
+# In[ ]:
 
 
 base["balance"] = base["balance"].clip(lower=0, upper=50000)
@@ -656,7 +743,7 @@ base["balance"] = base["balance"].clip(lower=0, upper=50000)
 # Duration :
 # - Max = 3881 (This is extreme compared to typical range.)
 
-# In[32]:
+# In[ ]:
 
 
 base["duration"] = base["duration"].clip(upper=2000)
@@ -665,7 +752,7 @@ base["duration"] = base["duration"].clip(upper=2000)
 # Campaign :
 # - Max = 63 contacts (Unrealistic when compared to the mean ~2.5)
 
-# In[33]:
+# In[ ]:
 
 
 base["campaign"] = base["campaign"].clip(upper=20)
@@ -687,7 +774,7 @@ base["campaign"] = base["campaign"].clip(upper=20)
 
 # ## Data Type and Feature Transformations
 
-# In[34]:
+# In[ ]:
 
 
 # Convert categorical variables
@@ -755,7 +842,7 @@ base["rate_environment"] = np.where(
 
 # # Machine Learning Implementation
 
-# In[35]:
+# In[ ]:
 
 
 # Defining features and target
@@ -787,7 +874,7 @@ y = base[target]
 
 # ## Train / Test Split
 
-# In[36]:
+# In[ ]:
 
 
 X_train, X_test, y_train, y_test = train_test_split(
@@ -803,7 +890,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # ## Preprocessing pipelines
 
-# In[39]:
+# In[ ]:
 
 
 numeric_features = [
@@ -828,7 +915,7 @@ categorical_features = [
 ]
 
 
-# In[40]:
+# In[ ]:
 
 
 numeric_pipeline = Pipeline([
@@ -851,7 +938,7 @@ preprocessor = ColumnTransformer([
 
 # ## Train multiple models
 
-# In[51]:
+# In[ ]:
 
 
 models = {
@@ -880,7 +967,7 @@ for name, model in models.items():
 
 # ## Evaluate models
 
-# In[54]:
+# In[ ]:
 
 
 for name, pipeline in model_pipelines.items():
@@ -909,7 +996,7 @@ for name, pipeline in model_pipelines.items():
 
 # ## Confusion matrix
 
-# In[55]:
+# In[ ]:
 
 
 best_model = model_pipelines["Random Forest"]
@@ -947,7 +1034,7 @@ plt.show()
 
 # # Feature Importance
 
-# In[56]:
+# In[ ]:
 
 
 # Get trained model
@@ -987,7 +1074,7 @@ feature_importance_df = pd.DataFrame({
 feature_importance_df.head(15)
 
 
-# In[57]:
+# In[ ]:
 
 
 top_features = feature_importance_df.head(10)
@@ -1082,7 +1169,7 @@ plt.show()
 # Federal Reserve Economic Data (https://fred.stlouisfed.org/)
 # ChatGPT
 
-# In[37]:
+# In[ ]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
