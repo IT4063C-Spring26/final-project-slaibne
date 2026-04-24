@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # {Annuity Product Selection Analysis Using Customer Behavior and Macroeconomic Conditions}📝
+# # Annuity Product Selection Analysis Using Customer Behavior and Macroeconomic Condition
 # 
 # ![Banner](./assets/banner.jpeg)
 
-# ## Topic
-# *What problem are you (or your stakeholder) trying to address?*
-# 📝 <!-- Answer Below -->
+# ## Project Overview
+
+# ### Topic
 # 
 # Retail annuity products, specifically fixed, variable and indexed annuities, are designed to meet different financial needs related to risk tolerance, income stability, and long-term growth. However, product selection is oftern influenced by a combination of customer demographics (i.e age, income, and retirement horizon) and external economic conditions such as interest rates and inflation, rather than a clear data-driven matching process.
 # 
@@ -31,10 +31,7 @@
 # - and better alignment between customer needs and financial products
 # 
 
-# ## Project Question
-# *What specific question are you seeking to answer with this project?*
-# *This is not the same as the questions you ask to limit the scope of the project.*
-# 📝 <!-- Answer Below -->
+# ### Project Question
 # 
 # How do customer demographic(age and income) and macroeconomic conditions(interest rates) influence the liklihood of selecting fixed, variable, or indexed annuity products?
 # 
@@ -44,9 +41,7 @@
 # - How do changes in interest rates over time impact the distribution of annuity product types?
 # - Which factors (age, income, or economic conditions) have the greatest predictive power in determining product selection?
 
-# ## What would an answer look like?
-# *What is your hypothesized answer to your question?*
-# 📝 <!-- Answer Below -->
+# ### Expected Answer / Hypothesis
 # 
 # - A predictive model outputting probabilities such as: “A 60-year-old with moderate income during high interest rate periods has a 72% probability of selecting a fixed annuity”
 # 
@@ -59,11 +54,7 @@
 # 
 # 
 
-# ## Data Sources
-# *What 3 data sources have you identified for this project?*
-# *How are you going to relate these datasets?*
-# 📝 <!-- Answer Below -->
-# 
+# ### Data Sources
 # Economic Indicators (API) : from Federal Reserve Economic Data (https://fred.stlouisfed.org/)
 # 
 # Key variables: 
@@ -89,10 +80,7 @@
 # - Customer attributes such as age, income, and prevailing interest rates were used to assign annuity product types in a way that reflects realistic market tendencies
 # 
 
-# ## Approach and Analysis
-# *What is your approach to answering your project question?*
-# *How will you use the identified data to answer your project question?*
-# 📝 <!-- Start Discussing the project here; you can add as many code cells as you need -->
+# ### Approach and Analysis
 
 # This project will follow a structured data analytics workflow to examine how customer demographics and economic conditions influence annuity product selection.
 # 
@@ -158,15 +146,9 @@
 # Evaluate how economic conditions shift product preferences
 # Discuss how these insights could support better targeting and product recommendations in an annuity business context
 
-# ## Resources and References
-# *What resources and references have you used for this project?*
-# 📝 <!-- Answer Below -->
-# 
-# Kaggle - Bank Marketing dataset https://www.kaggle.com/datasets/janiobachmann/bank-marketing-dataset?resource=download
-# Federal Reserve Economic Data (https://fred.stlouisfed.org/)
-# ChatGPT
+# ## Setup
 
-# # Imports
+# ### Imports
 # 
 
 # In[2]:
@@ -183,6 +165,27 @@ import seaborn as sns
 from dotenv import load_dotenv
 from pandas_datareader import data as pdr
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+
+# In[7]:
+
+
+np.random.seed(42)
+
+
+# A random seed is set to make simulated values reproducible. This ensures that income generation, year assignment, and simulated annuity product assignment remain consistent across notebook runs.
+
+# ### Environment Variables
+
+# In[3]:
 
 
 load_dotenv()
@@ -195,14 +198,20 @@ else:
     print("FRED_API_KEY successfully loaded.")
 
 
-# # Setup and Prepare
-# 
-# 
+# ## Data Loading and Preparation
 
-# In[3]:
+# ### Load Bank Marketing Dataset
+
+# In[5]:
 
 
 bank_df = pd.read_csv("data/bank.csv", sep=",")
+
+
+# ### Initial Data Inspection
+
+# In[6]:
+
 
 bank_df.head()
 bank_df.info()
@@ -217,10 +226,10 @@ bank_df.isnull().sum()
 
 # The Bank Marketing dataset contains 11,162 customer records with 17 features describing demographic, financial, and behavioral attributes. The dataset includes both numerical variables(age, balance, duration, campaign) and categorical variables (job, marital status, education, loan status). No missing values are present but several categorical fields require encoding for machine learning. The dataset will serve as the primary customer behavioral dataset for modeling annuity product selection. 
 
-# In[5]:
+# In[2]:
 
 
-# Convert categorical variables (important for ML later)
+# Convert categorical variables
 categorical_cols = [
     "job", "marital", "education", "default",
     "housing", "loan", "contact", "month", "poutcome", "deposit"
@@ -229,6 +238,8 @@ categorical_cols = [
 for col in categorical_cols:
     bank_df[col] = bank_df[col].astype("category")
 
+
+# Categorical variables are explicitly converted to the 'category' data type to improve memory efficiency and ensure proper handling during exploratory data analysis. This step does not perform encoding but prepares the dataset for grouping and visualization.
 
 # In[6]:
 
@@ -788,7 +799,290 @@ X_train, X_test, y_train, y_test = train_test_split(
 )
 
 
+# An 80/20 train-test split was used so the model could learn from most of the dataset while preserving unseen data for evaluation. Stratified sampling was used because the target variable contains multiple product categories, and stratification helps preserve the same product distribution in both the training and testing sets.
+
+# ## Preprocessing pipelines
+
+# In[39]:
+
+
+numeric_features = [
+    "age",
+    "income",
+    "risk_score",
+    "retirement_horizon",
+    "interest_rate",
+    "campaign",
+    "previous"
+]
+
+categorical_features = [
+    "job",
+    "marital",
+    "education",
+    "housing",
+    "loan",
+    "deposit",
+    "age_group",
+    "rate_environment"
+]
+
+
+# In[40]:
+
+
+numeric_pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="median")),
+    ("scaler", StandardScaler())
+])
+
+categorical_pipeline = Pipeline([
+    ("imputer", SimpleImputer(strategy="most_frequent")),
+    ("encoder", OneHotEncoder(handle_unknown="ignore"))
+])
+
+preprocessor = ColumnTransformer([
+    ("numeric", numeric_pipeline, numeric_features),
+    ("categorical", categorical_pipeline, categorical_features)
+])
+
+
+# Numerical variables are imputed using the median because financial variables such as income can be skewed by high-value customers. Standard scaling is applied so large-scale variables like income do not dominate smaller-scale variables like risk score or interest rate. Categorical variables are imputed using the most frequent value and encoded using one-hot encoding so machine learning models can interpret them numerically.
+
+# ## Train multiple models
+
+# In[51]:
+
+
+models = {
+    "Logistic Regression": LogisticRegression(max_iter=1000, class_weight="balanced", random_state=42),
+    "Decision Tree": DecisionTreeClassifier(max_depth=6, random_state=42),
+    "Random Forest": RandomForestClassifier(n_estimators=100, random_state=42)
+}
+
+
+# To address class imbalance, class weighting can be applied to penalize misclassification of underrepresented product types. This encourages the model to better learn patterns associated with fixed and indexed annuities rather than defaulting to the dominant variable category.
+
 # In[ ]:
+
+
+model_pipelines = {}
+
+for name, model in models.items():
+    pipeline = Pipeline([
+        ("preprocessor", preprocessor),
+        ("model", model)
+    ])
+
+    pipeline.fit(X_train, y_train)
+    model_pipelines[name] = pipeline
+
+
+# ## Evaluate models
+
+# In[54]:
+
+
+for name, pipeline in model_pipelines.items():
+    y_pred = pipeline.predict(X_test)
+
+    print("=" * 60)
+    print(name)
+    print("Accuracy:", accuracy_score(y_test, y_pred))
+    print()
+    print(classification_report(y_test, y_pred))
+
+
+# Each model was evaluated on the same test set using accuracy, precision, recall, and F1-score. Accuracy measures overall correctness, while precision, recall, and F1-score provide more detail about how well each annuity product category is predicted.
+
+# The machine learning results indicate that all models consistently predict variable annuities with high recall, while struggling to accurately classify fixed and indexed products. This suggests that the dataset contains a dominant pattern in which a large proportion of customers fall into profiles associated with variable annuity selection.
+# 
+# Logistic regression achieved the highest overall accuracy (51%), but this performance is largely driven by its ability to correctly classify variable annuities (recall = 0.93). However, it completely fails to identify indexed annuities, indicating that linear decision boundaries are insufficient to distinguish more nuanced product categories.
+# 
+# The decision tree model provides slightly more balanced performance across classes, capturing non-linear relationships between risk score, income, and interest rate. However, it still exhibits a strong bias toward variable annuities, reflecting the underlying data distribution.
+# 
+# The random forest model attempts to generalize across multiple decision trees and produces more balanced precision across categories, but at the cost of slightly lower accuracy. This suggests that while ensemble methods improve robustness, they cannot fully overcome the class imbalance present in the dataset.
+# 
+# Overall, these results indicate that annuity product selection is not evenly distributed across categories. Instead, the combination of demographic factors, financial characteristics, and macroeconomic conditions strongly favors variable annuities in the simulated dataset. Fixed and indexed products appear to require more specific conditions, making them harder for models to distinguish.
+# 
+# This outcome is consistent with the probabilistic simulation logic used to generate the dataset and highlights the importance of considering class distribution when evaluating model performance.
+
+# ## Confusion matrix
+
+# In[55]:
+
+
+best_model = model_pipelines["Random Forest"]
+
+y_pred_best = best_model.predict(X_test)
+
+cm = confusion_matrix(y_test, y_pred_best)
+
+plt.figure(figsize=(6, 5))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    cmap="Blues",
+    xticklabels=best_model.classes_,
+    yticklabels=best_model.classes_
+)
+plt.title("Confusion Matrix - Random Forest")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+
+# The confusion matrix provides a detailed view of model performance across annuity product categories. The model demonstrates strong performance in identifying variable annuities, correctly classifying 888 instances. However, it struggles significantly with fixed and indexed annuities, frequently misclassifying them as variable.
+# 
+# A large number of fixed annuities (409 instances) and indexed annuities (362 instances) are incorrectly predicted as variable. This indicates that the model is biased toward the variable class, which is consistent with the overall distribution of the dataset and the probabilistic logic used to generate product assignments.
+# 
+# Indexed annuities are particularly difficult for the model to distinguish, as they share characteristics with both fixed and variable products. This overlap results in low classification accuracy for this category and highlights the complexity of modeling hybrid financial products.
+# 
+# These results suggest that while the model effectively captures dominant patterns associated with higher-risk, growth-oriented customers, it has difficulty identifying more nuanced or conservative profiles. This reflects both the underlying data distribution and the inherent complexity of annuity product segmentation.
+# 
+# Overall, the confusion matrix reveals that model performance is strongly influenced by class imbalance and overlapping feature distributions, rather than purely model limitations.
+
+# >To improve classification performance, techniques such as class weighting or resampling could be applied to better balance predictions across product types. Additionally, further feature engineering or threshold tuning may help distinguish indexed annuities more effectively.
+
+# # Feature Importance
+
+# In[56]:
+
+
+# Get trained model
+rf_pipeline = model_pipelines["Random Forest"]
+
+# Extract model and preprocessor
+rf_model = rf_pipeline.named_steps["model"]
+preprocessor = rf_pipeline.named_steps["preprocessor"]
+
+# Get feature names AFTER preprocessing
+numeric_features = [
+    "age", "income", "risk_score", "retirement_horizon",
+    "interest_rate", "campaign", "previous"
+]
+
+categorical_features = [
+    "job", "marital", "education", "housing",
+    "loan", "deposit", "age_group", "rate_environment"
+]
+
+# Get encoded categorical names
+encoded_cat_features = preprocessor.named_transformers_["categorical"]\
+    .named_steps["encoder"].get_feature_names_out(categorical_features)
+
+# Combine all feature names
+all_features = list(numeric_features) + list(encoded_cat_features)
+
+# Get importance values
+importances = rf_model.feature_importances_
+
+# Create dataframe
+feature_importance_df = pd.DataFrame({
+    "feature": all_features,
+    "importance": importances
+}).sort_values(by="importance", ascending=False)
+
+feature_importance_df.head(15)
+
+
+# In[57]:
+
+
+top_features = feature_importance_df.head(10)
+
+plt.figure(figsize=(10,6))
+plt.barh(top_features["feature"], top_features["importance"])
+plt.gca().invert_yaxis()
+plt.title("Top 10 Feature Importances (Random Forest)")
+plt.xlabel("Importance Score")
+plt.show()
+
+
+# The feature importance analysis from the Random Forest model reveals that income is the most influential predictor of annuity product selection, followed by interest rate, age, and retirement horizon. This indicates that both financial capacity and macroeconomic conditions play a dominant role in determining product choice.
+# 
+# The high importance of interest rates supports the project’s hypothesis that external economic conditions significantly impact annuity demand. Similarly, age and retirement horizon reflect lifecycle effects, where younger customers with longer time horizons are more likely to select higher-risk products.
+# 
+# Interestingly, behavioral variables such as campaign and previous interactions also contribute meaningfully, suggesting that customer engagement and prior financial activity influence decision-making.
+# 
+# The engineered risk_score feature shows lower importance than expected. This is likely because it is derived from other variables such as age and income, which are already included in the model. As a result, the model relies more on the original features rather than the aggregated risk score.
+# 
+# Overall, the results demonstrate that annuity product selection is driven by a combination of financial capacity, economic conditions, and customer lifecycle characteristics, aligning closely with real-world financial behavior.
+
+# # Final Section: Insights, Conclusions, and Business Implications
+
+# Final Insights and Conclusions
+# 
+# This project set out to analyze how customer demographics and macroeconomic conditions influence annuity product selection. By integrating customer-level behavioral data with economic indicators and a simulated annuity dataset, several meaningful insights were identified.
+# 
+# 1. Financial Capacity is the Strongest Driver
+# 
+# Income emerged as the most important predictor of annuity product selection. Customers with higher incomes were significantly more likely to be associated with higher-risk products such as variable annuities, while lower-income individuals tended toward more stable products like fixed annuities. This indicates that financial capacity plays a central role in determining risk tolerance and investment strategy.
+# 
+# 2. Macroeconomic Conditions Significantly Influence Product Selection
+# 
+# Interest rates were consistently one of the top predictors across both exploratory analysis and machine learning models. The data shows that:
+# 
+# Higher interest rate environments are associated with increased selection of fixed annuities
+# Lower interest rate environments shift preference toward variable annuities
+# 
+# This confirms that external economic conditions materially impact customer decision-making, reinforcing the importance of incorporating macroeconomic data into financial product analysis.
+# 
+# 
+# 3. Lifecycle Factors Shape Risk Behavior
+# 
+# Age and retirement horizon together form a strong lifecycle signal:
+# 
+# Younger customers with longer retirement horizons tend to select higher-risk products
+# Older customers nearing retirement shift toward more conservative options
+# 
+# This reflects well-established financial planning principles and demonstrates that the model captures realistic behavioral patterns.
+# 
+# 4. Behavioral Data Adds Predictive Value
+# 
+# Variables derived from the bank dataset, such as campaign (number of contacts) and previous (prior interactions), contributed meaningfully to prediction performance. This suggests that:
+# 
+# Customer engagement and interaction history influence financial decisions
+# More engaged customers may be more open to complex or higher-risk financial products
+# 
+# This aligns with real-world financial services, where relationship depth and interaction frequency often drive product adoption.
+# 
+# 5. Engineered Risk Score Shows Redundancy
+# 
+# Although a composite risk_score was engineered to represent customer risk tolerance, it was less important than expected in the model. This is because the underlying variables used to construct it (such as age, income, and financial behavior) were already included individually.
+# 
+# As a result, the model relied more heavily on the raw features rather than the aggregated score, demonstrating a case of feature redundancy.
+
+# ## Limitations
+
+# While the project provides meaningful insights, several limitations should be acknowledged:
+# 
+# The annuity product dataset is simulated rather than real-world data
+# Product assignment logic is based on assumed financial behavior, not observed outcomes
+# The Bank Marketing dataset was repurposed and does not directly represent annuity customers
+# Class imbalance is present, with the model favoring the “variable” product class
+# Certain features (such as education or deposit status) showed low predictive value
+# 
+# These limitations highlight the challenges of working with proxy datasets and simulated environments.
+
+# ## Future Improvements
+
+# To enhance the accuracy and realism of the analysis, future work could include:
+# 
+# - Incorporating real annuity transaction data (if available)
+# - Improving class balance through resampling techniques (SMOTE, class weighting)
+# - Refining product assignment logic using more granular financial rules
+# - Adding additional macroeconomic indicators (inflation, unemployment rates)
+# - Exploring more advanced models (gradient boosting, XGBoost)
+# - Building a recommendation system based on predicted probabilities
+
+# ## Resources and References
+# Kaggle - Bank Marketing dataset https://www.kaggle.com/datasets/janiobachmann/bank-marketing-dataset?resource=download
+# Federal Reserve Economic Data (https://fred.stlouisfed.org/)
+# ChatGPT
+
+# In[37]:
 
 
 # ⚠️ Make sure you run this cell at the end of your notebook before every submission!
